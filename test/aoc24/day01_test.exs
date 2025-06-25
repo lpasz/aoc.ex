@@ -11,7 +11,7 @@ defmodule Aoc24.Day01Test do
   end
 
   test "part1" do
-    assert Day01.part1(@input) == 2367773
+    assert Day01.part1(@input) == 2_367_773
   end
 
   test "example2" do
@@ -19,6 +19,6 @@ defmodule Aoc24.Day01Test do
   end
 
   test "part2" do
-    assert Day01.part2(@input) == 21271939
+    assert Day01.part2(@input) == 21_271_939
   end
-end 
+end

@@ -18,6 +18,7 @@ defmodule Aoc24.Day02 do
   end
 
   defp some_valid?([h | t]), do: some_valid?([], h, t)
+
   defp some_valid?(prev, curr, next) do
     cond do
       next == [] -> valid_line?(prev)

@@ -10,15 +10,15 @@ defmodule Aoc24.Day02Test do
     assert Day02.part1(@example) == 2
   end
 
-   test "part1" do
-     assert Day02.part1(@input) == 670
-   end
-  
+  test "part1" do
+    assert Day02.part1(@input) == 670
+  end
+
   test "example2" do
     assert Day02.part2(@example) == 4
   end
-  
-   test "part2" do
-     assert Day02.part2(@input) == 700
-   end
-end 
+
+  test "part2" do
+    assert Day02.part2(@input) == 700
+  end
+end

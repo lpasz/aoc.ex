@@ -8,6 +8,12 @@ defmodule Aoc do
     |> Enum.map(&Enum.map(&1, fun))
   end
 
+  defmacro left ~> right do
+    Macro.pipe(left, right, 1)
+  end
+
+  defdelegate to_int(string), to: String, as: :to_integer
+
   def alphabet do
     String.codepoints("abcdefghijklmnopqrstuvwxyz")
   end
