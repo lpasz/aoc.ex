@@ -8,8 +8,40 @@ defmodule Aoc do
     |> Enum.map(&Enum.map(&1, fun))
   end
 
+  def read_matrix_map(file_path, splitter \\ &String.codepoints/1, fun \\ & &1) do
+    file_path
+    |> File.read!()
+    |> String.split("\n")
+    |> Enum.map(splitter)
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {values, y} ->
+      values
+      |> Enum.with_index()
+      |> Enum.map(fn {value, x} -> {{x, y}, fun.(value)} end)
+    end)
+    |> Enum.into(%{})
+  end
+
+  def max_matrix(mtx) do
+    [x, y] = mtx
+    |> Map.keys()
+    |> Enum.reduce(fn [x, y], acc ->
+      if acc == nil do
+        [xx, yy] = acc
+        [max(x, xx), max(y, yy)]
+      else
+        [x, y]
+      end
+    end)
+    {x, y}
+  end
+
   defmacro left ~> right do
     Macro.pipe(left, right, 1)
+  end
+
+  defmacro left ~>> right do
+    Macro.pipe(left, right, 2)
   end
 
   defdelegate to_int(string), to: String, as: :to_integer
