@@ -1,4 +1,22 @@
 defmodule Aoc do
+  def two_parts_input(file_path) do
+    [a, b] =
+      file_path
+      |> File.read!()
+      |> String.trim()
+      |> String.split("\n\n")
+
+    {a, b}
+  end
+
+  def numbers_per_line(string) do
+    string
+    |> String.split("\n")
+    |> Enum.map(&Regex.scan(~r/\d+/, &1))
+    |> Enum.map(&List.flatten/1)
+    |> Enum.map(&to_int/1)
+  end
+
   def read_matrix(file_path, fun \\ & &1) do
     file_path
     |> File.read!()
@@ -23,16 +41,18 @@ defmodule Aoc do
   end
 
   def max_matrix(mtx) do
-    [x, y] = mtx
-    |> Map.keys()
-    |> Enum.reduce(fn [x, y], acc ->
-      if acc == nil do
-        [xx, yy] = acc
-        [max(x, xx), max(y, yy)]
-      else
-        [x, y]
-      end
-    end)
+    [x, y] =
+      mtx
+      |> Map.keys()
+      |> Enum.reduce(fn [x, y], acc ->
+        if acc == nil do
+          [xx, yy] = acc
+          [max(x, xx), max(y, yy)]
+        else
+          [x, y]
+        end
+      end)
+
     {x, y}
   end
 
@@ -44,7 +64,13 @@ defmodule Aoc do
     Macro.pipe(left, right, 2)
   end
 
-  defdelegate to_int(string), to: String, as: :to_integer
+  def to_int(string) when is_binary(string) do
+    String.to_integer(string)
+  end
+
+  def to_int(list) when is_list(list) do
+    Enum.map(list, &String.to_integer/1)
+  end
 
   def alphabet do
     String.codepoints("abcdefghijklmnopqrstuvwxyz")

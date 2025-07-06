@@ -17,7 +17,7 @@ defmodule Aoc24.Day04 do
 
   defp xmas({x, y}) do
     [
-      # ➡️
+      # ➡️ 
       [{x, y}, {x + 1, y}, {x + 2, y}, {x + 3, y}],
       # ⬇️
       [{x, y}, {x, y + 1}, {x, y + 2}, {x, y + 3}],
@@ -40,9 +40,9 @@ defmodule Aoc24.Day04 do
 
   defp x_mas({x, y}) do
     [
-      # ↘️
+      # ↖️⏺️↘️
       [{x - 1, y - 1}, {x, y}, {x + 1, y + 1}],
-      # ↙️
+      # ↙️⏺️↗️
       [{x - 1, y + 1}, {x, y}, {x + 1, y - 1}]
     ]
   end
