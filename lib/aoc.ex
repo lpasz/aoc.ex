@@ -1,4 +1,5 @@
 defmodule Aoc do
+  @moduledoc false
   def two_parts_input(file_path) do
     [a, b] =
       file_path
@@ -37,7 +38,7 @@ defmodule Aoc do
       |> Enum.with_index()
       |> Enum.map(fn {value, x} -> {{x, y}, fun.(value)} end)
     end)
-    |> Enum.into(%{})
+    |> Map.new()
   end
 
   def max_matrix(mtx) do

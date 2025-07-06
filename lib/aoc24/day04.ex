@@ -1,4 +1,5 @@
 defmodule Aoc24.Day04 do
+  @moduledoc false
   import Aoc
 
   def part1(file_path) do
@@ -7,8 +8,7 @@ defmodule Aoc24.Day04 do
     mtx
     |> Map.keys()
     |> Enum.flat_map(fn {x, y} -> {x, y} |> xmas() |> Enum.map(&mtx_string(&1, mtx)) end)
-    |> Enum.filter(&(&1 in ["XMAS", "SAMX"]))
-    |> Enum.count()
+    |> Enum.count(&(&1 in ["XMAS", "SAMX"]))
   end
 
   defp mtx_string(positions, mtx) do

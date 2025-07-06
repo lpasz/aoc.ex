@@ -1,4 +1,5 @@
 defmodule Aoc24.Day02 do
+  @moduledoc false
   def part1(file_path) do
     file_path
     |> Aoc.read_matrix(&String.to_integer/1)
