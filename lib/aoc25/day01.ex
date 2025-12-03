@@ -4,45 +4,21 @@ defmodule Aoc25.Day01 do
     steps = parse(file_path)
 
     steps
-    |> Enum.reduce(
-      %{stop_at_zero: 0, current_position: 50},
-      fn step, %{stop_at_zero: cnt, current_position: current_position} ->
-        IO.inspect(%{stop_at_zero: cnt, current_position: current_position})
-
-        case click(step, current_position) do
-          0 -> %{stop_at_zero: cnt + 1, current_position: 0}
-          num -> %{stop_at_zero: cnt, current_position: num}
-        end
+    |> Enum.reduce({0, 50}, fn step, {cnt, curr} ->
+      case click(step, curr, cnt) do
+        {_, 0} -> {cnt + 1, 0}
+        {_, num} -> {cnt, num}
       end
-    )
-    |> Map.get(:stop_at_zero)
-  end
-
-  def click(step, current_position) do
-    case step do
-      {:left, num} -> left_clicks(num, current_position)
-      {:right, num} -> right_clicks(num, current_position)
-    end
-  end
-
-  def left_clicks(num, current_position) do
-    cond do
-      num == 0 -> current_position
-      current_position == 0 -> left_clicks(num - 1, 99)
-      :else -> left_clicks(num - 1, current_position - 1)
-    end
-  end
-
-  def right_clicks(num, current_position) do
-    cond do
-      num == 0 -> current_position
-      current_position == 99 -> right_clicks(num - 1, 0)
-      :else -> right_clicks(num - 1, current_position + 1)
-    end
+    end)
+    |> then(fn {acc, _} -> acc end)
   end
 
   def part2(file_path) do
-    :boom
+    steps = parse(file_path)
+
+    steps
+    |> Enum.reduce({0, 50}, fn step, {cnt, curr} -> click(step, curr, cnt) end)
+    |> then(fn {acc, _} -> acc end)
   end
 
   defp parse(file_path) do
@@ -53,5 +29,17 @@ defmodule Aoc25.Day01 do
       "L" <> number -> {:left, String.to_integer(number)}
       "R" <> number -> {:right, String.to_integer(number)}
     end)
+  end
+
+  def click(step, current_position, acc) do
+    case {step, current_position} do
+      {{:left, 0}, _} -> {acc, current_position}
+      {{:left, num}, 0} -> click({:left, num - 1}, 99, acc)
+      {{:left, num}, 1} -> click({:left, num - 1}, 0, acc + 1)
+      {{:left, num}, curr} -> click({:left, num - 1}, curr - 1, acc)
+      {{:right, 0}, _} -> {acc, current_position}
+      {{:right, num}, 99} -> click({:right, num - 1}, 0, acc + 1)
+      {{:right, num}, curr} -> click({:right, num - 1}, curr + 1, acc)
+    end
   end
 end
