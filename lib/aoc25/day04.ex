@@ -2,6 +2,14 @@ defmodule Aoc25.Day04 do
   @moduledoc false
   require Aoc
 
+  @doc """
+  ## Examples
+    iex> Aoc25.Day04.part1("example.txt")
+    13
+
+    iex> Aoc25.Day04.part1("input.txt")
+    1502
+  """
   def part1(file_path) do
     file_path
     |> Aoc.input_path()
@@ -10,6 +18,14 @@ defmodule Aoc25.Day04 do
     |> Enum.count()
   end
 
+  @doc """
+  ## Examples
+    iex> Aoc25.Day04.part2("example.txt")
+    43
+
+    iex> Aoc25.Day04.part2("input.txt")
+    9083
+  """
   def part2(file_path) do
     file_path
     |> Aoc.input_path()

@@ -99,10 +99,10 @@ defmodule Mix.Tasks.Aoc.Gen do
 
     @doc ~S\"\"\"
     ## Examples
-        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("example.txt")
-        :todo
-        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("input.txt")
-        :todo
+      iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("example.txt")
+      :todo
+      iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("input.txt")
+      :todo
     \"\"\"
     def part2(file_path) do
       file_path
