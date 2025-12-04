@@ -152,4 +152,97 @@ defmodule Aoc do
   def digits_to_number(digits) do
     Enum.reduce(digits, 0, fn d, acc -> acc * 10 + d end)
   end
+
+  @doc """
+  Constructs the full, absolute path to an asset file based on the calling module's name.
+
+  ## Examples
+      # If called from Aoc25.Day01
+      Aoc.input_path("input.txt")
+      # => "assets/aoc25/day01/input.txt"
+  """
+  defmacro input_path(file) do
+    quote do
+      # Get the calling module's name (e.g., Aoc25.Day01)
+      module_name = __CALLER__.module
+
+      # Extract the year suffix (YY) and day (DD) from the module name
+      # Aoc25.Day01 -> ["Aoc", "25", "Day", "01"]
+      parts = module_name |> Atom.to_string() |> String.split(["Aoc", ".", "Day"], trim: true)
+
+      case parts do
+        [y_suffix, d_pad] ->
+          # Construct the asset directory path: "assets/aocYY/dayDD"
+          dir = Path.join(["assets", "aoc#{y_suffix}", "day#{d_pad}"])
+          Path.join(dir, unquote(file))
+
+        _ ->
+          raise "Aoc.input_path/1 must be called from a module with name pattern AocYY.DayDD, got: #{module_name}"
+      end
+    end
+  end
+
+  @doc """
+  A convenience macro that reads, trims, and splits the content of a file
+  into a list of lines using the resolved path.
+
+  ## Examples
+      # If called from Aoc25.Day01, reads "assets/aoc25/day01/input.txt"
+      Aoc.read_input("input.txt")
+      # => ["line1", "line2", ...]
+  """
+  defmacro read_input(file) do
+    quote do
+      unquote(file)
+      |> unquote(__MODULE__).input_path()
+      |> File.read!()
+      |> String.trim()
+      |> String.split("\n", trim: true)
+    end
+  end
+
+  @doc """
+  Writes the given contents to a file inside the current module's asset directory.
+  Useful for quickly adding example data from an IEx session or directly in test setup.
+
+  Since this is a macro, the file writing will execute when the macro is expanded
+  (i.e., when the code containing the call is run, such as during test execution).
+
+  ## Examples
+      # If called from Aoc25.Day01Test
+      contents = \"""
+      a=1
+      b=2
+      \"""
+      Aoc.put_example(contents)
+      # => Creates/updates "assets/aoc25/day01/example.txt"
+  """
+  defmacro put_example(contents, filename \\ "example.txt") do
+    quote do
+      # Get the calling module's name (e.g., Aoc25.Day01 or Aoc25.Day01Test)
+      module_name = __CALLER__.module
+
+      # Extract the year suffix (YY) and day (DD)
+      parts = module_name |> Atom.to_string() |> String.split(["Aoc", ".", "Day", "Test"], trim: true)
+
+      case parts do
+        [y_suffix, d_pad] ->
+          # Construct the asset directory path: "assets/aocYY/dayDD"
+          dir = Path.join(["assets", "aoc#{y_suffix}", "day#{d_pad}"])
+
+          # Unquote filename and contents to inject the values into the quoted code
+          full_path = Path.join(dir, unquote(filename))
+
+          # Ensure directory exists before writing
+          File.mkdir_p!(dir)
+
+          # Write content and return {:ok, path} or {:error, reason}
+          File.write(full_path, unquote(contents))
+          {:ok, full_path}
+
+        _ ->
+          {:error, "Aoc.put_example/2 must be called from a module with name pattern AocYY.DayDD or AocYY.DayDDTest."}
+      end
+    end
+  end
 end
