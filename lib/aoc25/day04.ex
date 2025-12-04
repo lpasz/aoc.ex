@@ -1,34 +1,34 @@
 defmodule Aoc25.Day04 do
   @moduledoc false
   def part1(file_path) do
-    matrix = Aoc.read_matrix_map(file_path)
-    fork_liftable = fork_liftable(matrix)
-    Enum.count(fork_liftable)
+    file_path
+    |> Aoc.read_matrix_map()
+    |> fork_liftable()
+    |> Enum.count()
   end
 
   def part2(file_path) do
-    matrix = Aoc.read_matrix_map(file_path)
-    fork_lift_until(matrix)
+    file_path
+    |> Aoc.read_matrix_map()
+    |> fork_lift_until_unable(lifted_so_far: 0)
   end
 
-  defp fork_lift_until(matrix, acc \\ 0) do
-    case fork_liftable(matrix) do
-      [] ->
-        acc
+  defp fork_lift_until_unable(matrix, lifted_so_far: acc) do
+    fork_liftable = fork_liftable(matrix)
 
-      fork_liftable ->
-        lifted = Enum.count(fork_liftable)
+    if Enum.empty?(fork_liftable) do
+      acc
+    else
+      lifted_so_far = acc + length(fork_liftable)
 
-        matrix
-        |> lift(fork_liftable)
-        |> fork_lift_until(acc + lifted)
+      matrix
+      |> lift(fork_liftable)
+      |> fork_lift_until_unable(lifted_so_far: lifted_so_far)
     end
   end
 
   defp lift(matrix, to_lift) do
-    Enum.reduce(to_lift, matrix, fn {coord, "@"}, acc ->
-      Map.put(acc, coord, ".")
-    end)
+    Enum.reduce(to_lift, matrix, fn {coord, "@"}, acc -> Map.put(acc, coord, ".") end)
   end
 
   defp fork_liftable(matrix) do
@@ -41,7 +41,7 @@ defmodule Aoc25.Day04 do
     coord
     |> Aoc.around()
     |> Enum.map(&Map.get(matrix, &1))
-    |> Enum.filter(&(&1 == "@"))
-    |> then(fn cnt -> Enum.count(cnt) < 4 end)
+    |> Enum.count(&(&1 == "@"))
+    |> Kernel.<(4)
   end
 end
