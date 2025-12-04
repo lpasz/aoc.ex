@@ -3,8 +3,8 @@ defmodule Aoc25.Day04Test do
 
   alias Aoc25.Day04
 
-  @example "./assets/aoc25/day04/example.txt"
-  @input "./assets/aoc25/day04/input.txt"
+  @example "example.txt"
+  @input "input.txt"
 
   test "example" do
     assert Day04.part1(@example) == 13

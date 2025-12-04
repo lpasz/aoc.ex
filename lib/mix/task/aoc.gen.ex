@@ -6,6 +6,8 @@ defmodule Mix.Tasks.Aoc.Gen do
 
   import Mix.Generator
 
+  require Aoc
+
   @requirements ["app.start"]
   def run(args) do
     # Parse options: -d 1 -y 2025
@@ -83,12 +85,28 @@ defmodule Mix.Tasks.Aoc.Gen do
 
     require Aoc
 
+    @doc ~S\"\"\"
+    ## Examples
+        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("example.txt")
+        :todo
+        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("input.txt")
+        :todo
+    \"\"\"
     def part1(file_path) do
-      :todo
+      file_path
+      |> Aoc.input_path()      
     end
 
+    @doc ~S\"\"\"
+    ## Examples
+        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("example.txt")
+        :todo
+        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part2("input.txt")
+        :todo
+    \"\"\"
     def part2(file_path) do
-      :todo
+      file_path
+      |> Aoc.input_path()      
     end
   end
   """)
@@ -96,22 +114,7 @@ defmodule Mix.Tasks.Aoc.Gen do
   embed_template(:test, """
   defmodule Aoc<%= @y_suffix %>.Day<%= @day_pad %>Test do
     use ExUnit.Case, async: true
-
-    require Aoc
-
-    alias Aoc<%= @y_suffix %>.Day<%= @day_pad %>
-
-    @input "./<%= @asset_dir %>/input.txt"
-
-    test "part1 input" do
-      # Replace :todo with the expected answer when you solve Part 1
-      assert Day<%= @day_pad %>.part1(@input) == :boom
-    end
-
-    test "part2 input" do
-      # Replace :todo with the expected answer when you solve Part 2
-      assert Day<%= @day_pad %>.part2(@input) == :boom
-    end
+    doctest Aoc<%= @y_suffix %>.Day<%= @day_pad %>
   end
   """)
 end

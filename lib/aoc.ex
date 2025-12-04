@@ -162,13 +162,17 @@ defmodule Aoc do
       # => "assets/aoc25/day01/input.txt"
   """
   defmacro input_path(file) do
+    module = __CALLER__.module
+
     quote do
       # Get the calling module's name (e.g., Aoc25.Day01)
-      module_name = __CALLER__.module
 
       # Extract the year suffix (YY) and day (DD) from the module name
-      # Aoc25.Day01 -> ["Aoc", "25", "Day", "01"]
-      parts = module_name |> Atom.to_string() |> String.split(["Aoc", ".", "Day"], trim: true)
+      # Elixir.Aoc25.Day01 -> ["Aoc", "25", "Day", "01"]
+      parts =
+        unquote(module)
+        |> Atom.to_string()
+        |> String.split(["Elixir", "Aoc", ".", "Day"], trim: true)
 
       case parts do
         [y_suffix, d_pad] ->
@@ -177,7 +181,7 @@ defmodule Aoc do
           Path.join(dir, unquote(file))
 
         _ ->
-          raise "Aoc.input_path/1 must be called from a module with name pattern AocYY.DayDD, got: #{module_name}"
+          raise "Aoc.input_path/1 must be called from a module with name pattern AocYY.DayDD, got: #{unquote(module)}"
       end
     end
   end
@@ -198,9 +202,6 @@ defmodule Aoc do
 
   # Helper function (not a macro) that does the actual work.
   defp do_put_example(example_input, file_name, caller) do
-    file = Path.basename(caller.file)
-    line = caller.line
-
     # 1. Get the calling module's file path as a string and strip the 'lib/' prefix.
     # E.g., from "lib/aoc25/day04.ex" to "aoc25/day04.ex"
     full_file_path = caller.file |> to_string() |> String.trim_leading("lib/")

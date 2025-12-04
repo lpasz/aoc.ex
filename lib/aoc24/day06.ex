@@ -3,11 +3,11 @@ defmodule Aoc24.Day06 do
 
   require Aoc
 
-  def part1(file_path) do
+  def part1(_file_path) do
     :todo
   end
 
-  def part2(file_path) do
+  def part2(_file_path) do
     :todo
   end
 end
