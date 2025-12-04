@@ -6,9 +6,8 @@ defmodule Mix.Tasks.Aoc.Gen do
 
   import Mix.Generator
 
-  require Aoc
-
   @requirements ["app.start"]
+
   def run(args) do
     # Parse options: -d 1 -y 2025
     {opts, _, _} = OptionParser.parse(args, switches: [day: :integer, year: :integer], aliases: [d: :day, y: :year])
@@ -87,14 +86,14 @@ defmodule Mix.Tasks.Aoc.Gen do
 
     @doc ~S\"\"\"
     ## Examples
-        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("example.txt")
-        :todo
-        iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("input.txt")
-        :todo
+      iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("example.txt")
+      :todo
+      iex> Aoc<%= @y_suffix %>.Day<%= @day_pad %>.part1("input.txt")
+      :todo
     \"\"\"
     def part1(file_path) do
       file_path
-      |> Aoc.input_path()      
+      |> Aoc.input_path()
     end
 
     @doc ~S\"\"\"
@@ -106,7 +105,7 @@ defmodule Mix.Tasks.Aoc.Gen do
     \"\"\"
     def part2(file_path) do
       file_path
-      |> Aoc.input_path()      
+      |> Aoc.input_path()
     end
   end
   """)
@@ -114,6 +113,7 @@ defmodule Mix.Tasks.Aoc.Gen do
   embed_template(:test, """
   defmodule Aoc<%= @y_suffix %>.Day<%= @day_pad %>Test do
     use ExUnit.Case, async: true
+
     doctest Aoc<%= @y_suffix %>.Day<%= @day_pad %>
   end
   """)
