@@ -183,66 +183,50 @@ defmodule Aoc do
   end
 
   @doc """
-  A convenience macro that reads, trims, and splits the content of a file
-  into a list of lines using the resolved path.
+  Stores example input for an Advent of Code day file.
 
-  ## Examples
-      # If called from Aoc25.Day01, reads "assets/aoc25/day01/input.txt"
-      Aoc.read_input("input.txt")
-      # => ["line1", "line2", ...]
+  This macro captures the file path and line number from the call site
+  using __CALLER__, which is only safe to access inside the defmacro body.
   """
-  defmacro read_input(file) do
-    quote do
-      unquote(file)
-      |> unquote(__MODULE__).input_path()
-      |> File.read!()
-      |> String.trim()
-      |> String.split("\n", trim: true)
-    end
+  defmacro put_example(example_input, file_name \\ "example.txt") do
+    # Capture __CALLER__ data (like file and line) immediately in the macro body.
+    caller = __CALLER__
+
+    # We now call a private helper function, passing the caller data.
+    do_put_example(example_input, file_name, caller)
   end
 
-  @doc """
-  Writes the given contents to a file inside the current module's asset directory.
-  Useful for quickly adding example data from an IEx session or directly in test setup.
+  # Helper function (not a macro) that does the actual work.
+  defp do_put_example(example_input, file_name, caller) do
+    file = Path.basename(caller.file)
+    line = caller.line
 
-  Since this is a macro, the file writing will execute when the macro is expanded
-  (i.e., when the code containing the call is run, such as during test execution).
+    # 1. Get the calling module's file path as a string and strip the 'lib/' prefix.
+    # E.g., from "lib/aoc25/day04.ex" to "aoc25/day04.ex"
+    full_file_path = caller.file |> to_string() |> String.trim_leading("lib/")
 
-  ## Examples
-      # If called from Aoc25.Day01Test
-      contents = \"""
-      a=1
-      b=2
-      \"""
-      Aoc.put_example(contents)
-      # => Creates/updates "assets/aoc25/day01/example.txt"
-  """
-  defmacro put_example(contents, filename \\ "example.txt") do
+    # 2. Get the root path without extension.
+    # E.g., "aoc25/day04"
+    base_path = Path.rootname(full_file_path)
+
+    # 3. Construct the full target path, preserving the structure and using "assets/" as the root.
+    # This results in: "assets/aoc25/day04.txt"
+    target_path = Path.join(["assets", base_path, file_name])
+
+    # 4. The directory we need to create is derived from the target path (e.g., "assets/aoc25")
+    inputs_dir = Path.dirname(target_path)
+
+    # 5. Perform the side-effect (file writing) immediately upon compilation.
+    File.mkdir_p!(inputs_dir)
+    File.write!(target_path, example_input)
+
     quote do
-      # Get the calling module's name (e.g., Aoc25.Day01 or Aoc25.Day01Test)
-      module_name = __CALLER__.module
+      # 6. Provide feedback during compilation.
+      IO.puts("--- AoC Example Input Written ---")
+      IO.puts("Source Module: #{unquote(full_file_path)} (Line: #{unquote(caller.line)})")
+      IO.puts("Input File Created: #{unquote(target_path)}")
 
-      # Extract the year suffix (YY) and day (DD)
-      parts = module_name |> Atom.to_string() |> String.split(["Aoc", ".", "Day", "Test"], trim: true)
-
-      case parts do
-        [y_suffix, d_pad] ->
-          # Construct the asset directory path: "assets/aocYY/dayDD"
-          dir = Path.join(["assets", "aoc#{y_suffix}", "day#{d_pad}"])
-
-          # Unquote filename and contents to inject the values into the quoted code
-          full_path = Path.join(dir, unquote(filename))
-
-          # Ensure directory exists before writing
-          File.mkdir_p!(dir)
-
-          # Write content and return {:ok, path} or {:error, reason}
-          File.write(full_path, unquote(contents))
-          {:ok, full_path}
-
-        _ ->
-          {:error, "Aoc.put_example/2 must be called from a module with name pattern AocYY.DayDD or AocYY.DayDDTest."}
-      end
+      :ok
     end
   end
 end

@@ -1,9 +1,12 @@
 defmodule Mix.Tasks.Aoc.Gen do
-  use Mix.Task
-  import Mix.Generator
-
   @shortdoc "Generates AoC module, assets, and tests with auto-download"
 
+  @moduledoc false
+  use Mix.Task
+
+  import Mix.Generator
+
+  @requirements ["app.start"]
   def run(args) do
     # Parse options: -d 1 -y 2025
     {opts, _, _} = OptionParser.parse(args, switches: [day: :integer, year: :integer], aliases: [d: :day, y: :year])
@@ -60,10 +63,12 @@ defmodule Mix.Tasks.Aoc.Gen do
 
       # Download Real Input
       input_url = "https://adventofcode.com/#{year}/day/#{day}/input"
+
       case Req.get(input_url, headers: headers) do
         {:ok, %{status: 200, body: body}} ->
           create_file(Path.join(dir, "input.txt"), String.trim_trailing(body))
           Mix.shell().info([:green, "* Downloaded input.txt"])
+
         _ ->
           Mix.shell().error("Failed to download input. Check year/day and AOC_SESSION.")
       end

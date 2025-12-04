@@ -1,5 +1,20 @@
 defmodule Aoc25.Day04 do
   @moduledoc false
+  require Aoc
+
+  Aoc.put_example("""
+       @.@@.@@@@.
+       @@@.@.@.@@
+       @@@@@.@.@@
+       @.@@@@..@.
+       @@.@@@@.@@
+       .@@@@@@@.@
+       .@.@.@.@@@
+       @.@@@.@@@@
+       .@@@@@@@@.
+       @.@.@@@.@.
+       """, "exmaple2.txt")
+
   def part1(file_path) do
     file_path
     |> Aoc.read_matrix_map()
