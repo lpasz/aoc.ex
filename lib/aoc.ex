@@ -148,4 +148,8 @@ defmodule Aoc do
   def euclidean_distance({x1, y1}, {x2, y2}) do
     abs(x2 - x1) + abs(y2 - y1)
   end
+
+  def digits_to_number(digits) do
+    Enum.reduce(digits, 0, fn d, acc -> acc * 10 + d end)
+  end
 end

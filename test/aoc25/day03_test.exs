@@ -7,18 +7,18 @@ defmodule Aoc25.Day03Test do
   @input "./assets/aoc25/day03/input.txt"
 
   test "example" do
-    assert Day03.part1(@example) == 1227775554
+    assert Day03.part1(@example) == 357
   end
 
   test "part1" do
-    assert Day03.part1(@input) == 20323751480
+    assert Day03.part1(@input) == 17193
   end
 
   test "example2" do
-    assert Day03.part2(@example) == 4174379265
+    assert Day03.part2(@example) == 3121910778619
   end
 
   test "part2" do
-    assert Day03.part2(@input) == 30360171216
+    assert Day03.part2(@input) == 171297349921310
   end
 end
