@@ -10,6 +10,63 @@ defmodule Aoc do
     {a, b}
   end
 
+  def extract_positive_numbers(input) do
+    Regex.scan(~r"\d+", input)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def extract_numbers(input) do
+    Regex.scan(~r"[-]?\d+", input)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  @doc """
+  We are using the polygon version.
+  See more: https://en.wikipedia.org/wiki/Shoelace_formula
+  """
+  def shoelace(polygon_points) do
+    polygon_points
+    |> Enum.chunk_every(2, 1, :dicard)
+    |> Enum.map(fn [[x1, y1], [x2, y2]] -> (y1 + y2) * (x1 - x2) end)
+    |> Enum.sum()
+    |> div(2)
+    |> abs()
+  end
+
+  @doc """
+  Normaly used to find the area, since we found the area with shoelace, we are using it to get the number of internal points.
+  See more: https://en.wikipedia.org/wiki/Pick%27s_theorem
+  """
+  def pick_theorem_internal_points(area, polygon_points_count) do
+    area - (div(polygon_points_count, 2) - 1)
+  end
+
+  def line_intersection(line1, line2) do
+    div = line2.slope - line1.slope
+
+    if div == 0 do
+      nil
+    else
+      x = (line1.offset - line2.offset) / div
+      y = line1.slope * x + line1.offset
+      {x, y}
+    end
+  end
+
+  def compute_line({x1, y1}, {x2, y2}) do
+    if not (x2 - x1 == 0) do
+      m = (y2 - y1) / (x2 - x1)
+
+      %{slope: m, offset: y1 - m * x1}
+    end
+  end
+
+  def compute_point_for_x({x1, y1}, slope, x) do
+    {x, slope * (x - x1) * y1}
+  end
+
   def numbers_per_line(string) do
     string
     |> String.split("\n")
@@ -151,6 +208,10 @@ defmodule Aoc do
 
   def digits_to_number(digits) do
     Enum.reduce(digits, 0, fn d, acc -> acc * 10 + d end)
+  end
+
+  def flatten_once(list) do
+    Enum.flat_map(list, &Function.identity/1)
   end
 
   @doc """
