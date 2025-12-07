@@ -11,18 +11,7 @@ defmodule Aoc25.Day05 do
     733
   """
   def part1(file_path) do
-    [fresh_ingredient_ids, ingredient_ids] =
-      file_path |> Aoc.input_path() |> File.read!() |> String.split("\n\n", trim: true)
-
-    fresh_ingredient_ids =
-      fresh_ingredient_ids
-      |> Aoc.extract_positive_numbers()
-      |> Enum.chunk_every(2)
-      |> Enum.map(&Enum.sort/1)
-      |> Enum.map(fn [n1, n2] -> n1..n2 end)
-
-    ingredient_ids = Aoc.extract_positive_numbers(ingredient_ids)
-
+    {fresh_ingredient_ids, ingredient_ids} = parse(file_path)
     Enum.count(ingredient_ids, fn ingredient_id -> Enum.any?(fresh_ingredient_ids, &(ingredient_id in &1)) end)
   end
 
@@ -34,16 +23,9 @@ defmodule Aoc25.Day05 do
     345821388687084
   """
   def part2(file_path) do
-    file_path
-    |> Aoc.input_path()
-    |> File.read!()
-    |> String.split("\n\n", trim: true)
-    |> List.first()
-    |> Aoc.extract_positive_numbers()
-    |> Enum.chunk_every(2)
-    |> Enum.map(&Enum.sort/1)
-    |> Enum.map(fn [n1, n2] -> n1..n2 end)
-    |> Enum.sort()
+    {fresh_ingredient_ids, _ingredient_ids} = parse(file_path)
+
+    fresh_ingredient_ids
     |> Enum.reduce([], fn
       range, [] ->
         [range]
@@ -58,5 +40,20 @@ defmodule Aoc25.Day05 do
     end)
     |> Enum.map(&Range.size/1)
     |> Enum.sum()
+  end
+
+  defp parse(file_path) do
+    [fresh_ingredient_ids, ingredient_ids] =
+      file_path |> Aoc.input_path() |> File.read!() |> String.split("\n\n", trim: true)
+
+    fresh_ingredient_ids =
+      fresh_ingredient_ids
+      |> Aoc.extract_positive_numbers()
+      |> Enum.chunk_every(2)
+      |> Enum.map(&Enum.sort/1)
+      |> Enum.map(fn [n1, n2] -> n1..n2 end)
+      |> Enum.sort()
+
+    {fresh_ingredient_ids, Aoc.extract_positive_numbers(ingredient_ids)}
   end
 end
