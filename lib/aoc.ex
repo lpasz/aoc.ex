@@ -10,6 +10,28 @@ defmodule Aoc do
     {a, b}
   end
 
+  def print_matrix(mtx) do
+    {xmax, ymax} =
+      mtx
+      |> Map.keys()
+      |> Enum.reduce({0, 0}, fn {x, y}, {mx, my} -> {max(mx, x), max(my, y)} end)
+
+    for_result =
+      for y <- 0..ymax do
+        for_result =
+          for x <- 0..xmax do
+            Map.fetch!(mtx, {x, y})
+          end
+
+        Enum.join(for_result, "")
+      end
+
+    
+    IO.puts("\n----------------------------\n")
+    IO.puts(Enum.join(for_result, "\n"))
+    IO.puts("\n----------------------------\n")
+  end
+
   def extract_positive_numbers(input) do
     ~r"\d+"
     |> Regex.scan(input)
