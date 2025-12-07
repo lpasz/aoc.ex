@@ -3,7 +3,7 @@ defmodule Aoc24.Day04 do
   import Aoc
 
   def part1(file_path) do
-    mtx = read_matrix_map(file_path)
+    mtx = file_path |> File.read!() |> parse_matrix_map()
 
     mtx
     |> Map.keys()
@@ -29,7 +29,7 @@ defmodule Aoc24.Day04 do
   end
 
   def part2(file_path) do
-    mtx = read_matrix_map(file_path)
+    mtx = file_path |> File.read!() |> parse_matrix_map()
 
     mtx
     |> Map.keys()

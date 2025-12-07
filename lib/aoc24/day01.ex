@@ -2,7 +2,8 @@ defmodule Aoc24.Day01 do
   @moduledoc false
   def part1(file_path) do
     file_path
-    |> Aoc.read_matrix(&String.to_integer/1)
+    |> File.read!()
+    |> Aoc.parse_matrix(&String.to_integer/1)
     |> Aoc.transpose()
     |> Enum.map(&Enum.sort/1)
     |> Aoc.transpose()
@@ -12,7 +13,8 @@ defmodule Aoc24.Day01 do
 
   def part2(file_path) do
     file_path
-    |> Aoc.read_matrix(&String.to_integer/1)
+    |> File.read!()
+    |> Aoc.parse_matrix(&String.to_integer/1)
     |> Aoc.transpose()
     |> then(fn [list1, list2] ->
       list1

@@ -11,13 +11,15 @@ defmodule Aoc do
   end
 
   def extract_positive_numbers(input) do
-    Regex.scan(~r"\d+", input)
+    ~r"\d+"
+    |> Regex.scan(input)
     |> List.flatten()
     |> Enum.map(&String.to_integer/1)
   end
 
   def extract_numbers(input) do
-    Regex.scan(~r"[-]?\d+", input)
+    ~r"[-]?\d+"
+    |> Regex.scan(input)
     |> List.flatten()
     |> Enum.map(&String.to_integer/1)
   end
@@ -75,18 +77,16 @@ defmodule Aoc do
     |> Enum.map(&to_int/1)
   end
 
-  def read_matrix(file_path, fun \\ & &1) do
-    file_path
-    |> File.read!()
+  def parse_matrix(text, fun \\ & &1) do
+    text
     |> String.trim()
     |> String.split("\n")
     |> Enum.map(&String.split/1)
     |> Enum.map(&Enum.map(&1, fun))
   end
 
-  def read_matrix_map(file_path, splitter \\ &String.codepoints/1, fun \\ & &1) do
-    file_path
-    |> File.read!()
+  def parse_matrix_map(text, splitter \\ &String.codepoints/1, fun \\ & &1) do
+    text
     |> String.split("\n")
     |> Enum.map(splitter)
     |> Enum.with_index()
@@ -222,7 +222,7 @@ defmodule Aoc do
       Aoc.input_path("input.txt")
       # => "assets/aoc25/day01/input.txt"
   """
-  defmacro input_path(file) do
+  defmacro get_input(file) do
     module = __CALLER__.module
 
     quote do
@@ -239,7 +239,8 @@ defmodule Aoc do
         [y_suffix, d_pad] ->
           # Construct the asset directory path: "assets/aocYY/dayDD"
           dir = Path.join(["assets", "aoc#{y_suffix}", "day#{d_pad}"])
-          Path.join(dir, unquote(file))
+          path = Path.join(dir, unquote(file))
+          File.read!(path)
 
         _ ->
           raise "Aoc.input_path/1 must be called from a module with name pattern AocYY.DayDD, got: #{unquote(module)}"

@@ -2,7 +2,8 @@ defmodule Aoc24.Day02 do
   @moduledoc false
   def part1(file_path) do
     file_path
-    |> Aoc.read_matrix(&String.to_integer/1)
+    |> File.read!()
+    |> Aoc.parse_matrix(&String.to_integer/1)
     |> Enum.count(&valid_line?/1)
   end
 
@@ -14,7 +15,8 @@ defmodule Aoc24.Day02 do
 
   def part2(file_path) do
     file_path
-    |> Aoc.read_matrix(&String.to_integer/1)
+    |> File.read!()
+    |> Aoc.parse_matrix(&String.to_integer/1)
     |> Enum.count(&some_valid?/1)
   end
 

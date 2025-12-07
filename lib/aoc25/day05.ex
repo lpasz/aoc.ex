@@ -44,7 +44,7 @@ defmodule Aoc25.Day05 do
 
   defp parse(file_path) do
     [fresh_ingredient_ids, ingredient_ids] =
-      file_path |> Aoc.input_path() |> File.read!() |> String.split("\n\n", trim: true)
+      file_path |> Aoc.get_input() |> String.split("\n\n", trim: true)
 
     fresh_ingredient_ids =
       fresh_ingredient_ids

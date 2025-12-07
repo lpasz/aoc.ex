@@ -12,8 +12,8 @@ defmodule Aoc25.Day04 do
   """
   def part1(file_path) do
     file_path
-    |> Aoc.input_path()
-    |> Aoc.read_matrix_map()
+    |> Aoc.get_input()
+    |> Aoc.parse_matrix_map()
     |> fork_liftable()
     |> Enum.count()
   end
@@ -28,8 +28,8 @@ defmodule Aoc25.Day04 do
   """
   def part2(file_path) do
     file_path
-    |> Aoc.input_path()
-    |> Aoc.read_matrix_map()
+    |> Aoc.get_input()
+    |> Aoc.parse_matrix_map()
     |> fork_lift_until_unable(lifted_so_far: 0)
   end
 
