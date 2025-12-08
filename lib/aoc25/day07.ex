@@ -17,13 +17,9 @@ defmodule Aoc25.Day07 do
     mtx = Map.put(mtx, Aoc.down(s), "|")
     mtx = update(mtx)
 
-    mtx
-    |> Enum.filter(fn {_point, value} -> value == "^" end)
-    |> Enum.count(fn {point, "^"} ->
-      case %{up: mtx[Aoc.up(point)], left: mtx[Aoc.left(point)], right: mtx[Aoc.right(point)]} do
-        %{up: "|", left: "|", right: "|"} -> true
-        _ -> false
-      end
+    Enum.count(mtx, fn {point, value} ->
+      dir_fns = [&Aoc.up/1, &Aoc.right/1, &Aoc.left/1]
+      value == "^" and Enum.all?(dir_fns, &(Map.get(mtx, &1.(point)) == "|"))
     end)
   end
 
@@ -34,15 +30,12 @@ defmodule Aoc25.Day07 do
       |> Enum.map(fn {point, _} -> point end)
       |> Enum.reduce(mtx, fn point, mtx ->
         down = Aoc.down(point)
-
         down_left = Aoc.left(down)
         down_right = Aoc.right(down)
 
-        case {mtx[point], mtx[down_left], mtx[down], mtx[down_right]} do
-          {"|", _, ".", _} -> Map.put(mtx, down, "|")
-          {".", "|", "^", "|"} -> mtx
-          {"|", "|", "^", "|"} -> mtx
-          {"|", _, "^", _} -> mtx |> Map.put(down_left, "|") |> Map.put(down_right, "|")
+        case {mtx[point], mtx[down]} do
+          {"|", "."} -> Map.put(mtx, down, "|")
+          {"|", "^"} -> mtx |> Map.put(down_left, "|") |> Map.put(down_right, "|")
           _else -> mtx
         end
       end)
@@ -77,20 +70,13 @@ defmodule Aoc25.Day07 do
       next = Aoc.down(pos)
 
       case Map.get(mtx, next) do
-        "." ->
-          Map.update(acc, next, cnt, &(&1 + cnt))
-
-        "^" ->
-          acc
-          |> Map.update(Aoc.left(next), cnt, &(&1 + cnt))
-          |> Map.update(Aoc.right(next), cnt, &(&1 + cnt))
-
-        nil ->
-          Map.update(acc, :total, cnt, &(&1 + cnt))
+        "." -> Map.update(acc, next, cnt, &(&1 + cnt))
+        "^" -> acc |> Map.update(Aoc.left(next), cnt, &(&1 + cnt)) |> Map.update(Aoc.right(next), cnt, &(&1 + cnt))
+        nil -> Map.update(acc, :total, cnt, &(&1 + cnt))
       end
     end)
     |> case do
-      %{:total => total} -> total
+      %{total: total} -> total
       acc -> bfs(mtx, acc, i + 1)
     end
   end
