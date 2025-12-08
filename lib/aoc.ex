@@ -10,6 +10,16 @@ defmodule Aoc do
     {a, b}
   end
 
+  def keep(list, fun) do
+    Enum.flat_map(list, fn itm ->
+      case fun.(itm) do
+        false -> []
+        nil -> []
+        other -> [other]
+      end
+    end)
+  end
+
   def print_matrix(mtx) do
     {xmax, ymax} =
       mtx
@@ -26,7 +36,6 @@ defmodule Aoc do
         Enum.join(for_result, "")
       end
 
-    
     IO.puts("\n----------------------------\n")
     IO.puts(Enum.join(for_result, "\n"))
     IO.puts("\n----------------------------\n")
@@ -226,6 +235,14 @@ defmodule Aoc do
 
   def euclidean_distance({x1, y1}, {x2, y2}) do
     abs(x2 - x1) + abs(y2 - y1)
+  end
+
+  def euclidean_distance({x1, y1, z1}, {x2, y2, z2}) do
+    x = x1 - x2
+    y = y1 - y2
+    z = z1 - z2
+
+    :math.sqrt(x ** 2 + y ** 2 + z ** 2)
   end
 
   def digits_to_number(digits) do

@@ -12,7 +12,6 @@ defmodule Aoc25.Day07 do
   """
   def part1(file_path) do
     mtx = parse(file_path)
-
     s = Enum.find_value(mtx, fn {point, value} -> if value == "S", do: point end)
     mtx = Map.put(mtx, Aoc.down(s), "|")
     mtx = update(mtx)
@@ -24,27 +23,24 @@ defmodule Aoc25.Day07 do
   end
 
   defp update(mtx) do
-    updated_matrix =
-      mtx
-      |> Enum.filter(fn {_point, value} -> value == "|" end)
-      |> Enum.map(fn {point, _} -> point end)
-      |> Enum.reduce(mtx, fn point, mtx ->
-        down = Aoc.down(point)
-        down_left = Aoc.left(down)
-        down_right = Aoc.right(down)
+    mtx
+    |> Aoc.keep(fn {k, v} -> if v == "|", do: k end)
+    |> Enum.reduce(mtx, fn point, mtx ->
+      down = Aoc.down(point)
 
-        case {mtx[point], mtx[down]} do
-          {"|", "."} -> Map.put(mtx, down, "|")
-          {"|", "^"} -> mtx |> Map.put(down_left, "|") |> Map.put(down_right, "|")
-          _else -> mtx
-        end
-      end)
-
-    if updated_matrix == mtx do
-      mtx
-    else
-      update(updated_matrix)
-    end
+      case {Map.get(mtx, point), Map.get(mtx, down)} do
+        {"|", "."} -> Map.put(mtx, down, "|")
+        {"|", "^"} -> mtx |> Map.put(Aoc.left(down), "|") |> Map.put(Aoc.right(down), "|")
+        _else -> mtx
+      end
+    end)
+    |> then(
+      &if &1 == mtx do
+        mtx
+      else
+        update(&1)
+      end
+    )
   end
 
   defp parse(input) do
@@ -65,19 +61,21 @@ defmodule Aoc25.Day07 do
   end
 
   defp bfs(mtx, positions, i \\ 1) do
-    positions
-    |> Enum.reduce(%{}, fn {pos, cnt}, acc ->
-      next = Aoc.down(pos)
+    positions =
+      Enum.reduce(positions, %{}, fn {pos, cnt}, acc ->
+        next = Aoc.down(pos)
 
-      case Map.get(mtx, next) do
-        "." -> Map.update(acc, next, cnt, &(&1 + cnt))
-        "^" -> acc |> Map.update(Aoc.left(next), cnt, &(&1 + cnt)) |> Map.update(Aoc.right(next), cnt, &(&1 + cnt))
-        nil -> Map.update(acc, :total, cnt, &(&1 + cnt))
-      end
-    end)
-    |> case do
-      %{total: total} -> total
-      acc -> bfs(mtx, acc, i + 1)
+        case Map.get(mtx, next) do
+          "." -> Map.update(acc, next, cnt, &(&1 + cnt))
+          "^" -> acc |> Map.update(Aoc.left(next), cnt, &(&1 + cnt)) |> Map.update(Aoc.right(next), cnt, &(&1 + cnt))
+          nil -> Map.update(acc, :total, cnt, &(&1 + cnt))
+        end
+      end)
+
+    if total = Map.get(positions, :total) do
+      total
+    else
+      bfs(mtx, positions, i + 1)
     end
   end
 end
