@@ -336,8 +336,38 @@ defmodule Aoc do
   @type line_segment :: {point(), point()}
   @doc """
   Given two line segments, checks if they cross or touch each other.
-  touch is just if the edges of the point both start at the same point, they touch
-  cross is when one line crosses the other in the middle, they don't start together.
+
+  Parallel
+   A-------B
+   C-------D
+
+  Cross (proper intersection):
+
+
+   A       B
+    \     /
+     \   /
+      \ /
+       X
+      / \
+     /   \
+    C     D
+
+
+  Touch (intersect at the start/end only):
+
+        A
+       /
+      /
+   (B/D)---C
+
+  No intersection
+
+        A
+       /
+      /
+     B      D-----C
+
   """
   @spec intersect_at_point(line_segment(), line_segment()) ::
           {:touch, point()}

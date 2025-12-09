@@ -63,13 +63,14 @@ defmodule Aoc25.Day09 do
 
     areas = areas(vs)
 
-    {_, area} =
-      Enum.find(areas, fn {{{x1, y1}, {x2, y2}}, _area} ->
-        p1 = {x1, y1}
-        p2 = {x1, y2}
-        p3 = {x2, y2}
-        p4 = {x2, y1}
+    Enum.find_value(areas, fn {{{x1, y1}, {x2, y2}}, area} ->
+      # We change order here to properly provide line_segments
+      p1 = {x1, y1}
+      p2 = {x1, y2}
+      p3 = {x2, y2}
+      p4 = {x2, y1}
 
+      no_intersections? =
         edges
         |> Enum.flat_map(
           &[
@@ -82,9 +83,11 @@ defmodule Aoc25.Day09 do
           ]
         )
         |> Enum.all?(&(&1 == false))
-      end)
 
-    trunc(area)
+      if no_intersections? do
+        trunc(area)
+      end
+    end)
   end
 
   defp intersect?(line_seg1, line_seg2) do
