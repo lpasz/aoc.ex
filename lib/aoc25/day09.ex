@@ -73,12 +73,12 @@ defmodule Aoc25.Day09 do
         edges
         |> Enum.flat_map(
           &[
-            intersect_point({p1, p2}, &1),
-            intersect_point({p2, p3}, &1),
-            intersect_point({p3, p4}, &1),
-            intersect_point({p4, p1}, &1),
-            intersect_point({p1, p3}, &1),
-            intersect_point({p2, p4}, &1)
+            intersect?({p1, p2}, &1),
+            intersect?({p2, p3}, &1),
+            intersect?({p3, p4}, &1),
+            intersect?({p4, p1}, &1),
+            intersect?({p1, p3}, &1),
+            intersect?({p2, p4}, &1)
           ]
         )
         |> Enum.all?(&(&1 == false))
@@ -87,29 +87,10 @@ defmodule Aoc25.Day09 do
     trunc(area)
   end
 
-  def intersect_point({{x1, y1}, {x2, y2}}, {{x3, y3}, {x4, y4}}) do
-    dx1 = x2 - x1
-    dy1 = y2 - y1
-    dx2 = x4 - x3
-    dy2 = y4 - y3
-
-    den = dx1 * dy2 - dy1 * dx2
-
-    if den == 0 do
-      # parallel
-      false
-    else
-      t = ((x3 - x1) * dy2 - (y3 - y1) * dx2) / den
-      u = ((x3 - x1) * dy1 - (y3 - y1) * dx1) / den
-
-      if t > 0 and t < 1 and u > 0 and u < 1 do
-        {x1 + t * dx1, y1 + t * dy1} not in [{x1, y1}, {x2, y2}, {x3, y3}, {x4, y4}]
-        # not in [{x1, y1}, {x2, y2}, {x3, y3}, {x4, y4}]
-        # {x1 + t * dx1, y1 + t * dy1}
-      else
-        # not cross
-        false
-      end
+  defp intersect?(line_seg1, line_seg2) do
+    case Aoc.intersect_at_point(line_seg1, line_seg2) do
+      {:cross, _} -> true
+      _ -> false
     end
   end
 end

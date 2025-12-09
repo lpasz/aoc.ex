@@ -331,4 +331,44 @@ defmodule Aoc do
       :ok
     end
   end
+
+  @type point :: {float(), float()}
+  @type line_segment :: {point(), point()}
+  @doc """
+  Given two line segments, checks if they cross or touch each other.
+  touch is just if the edges of the point both start at the same point, they touch
+  cross is when one line crosses the other in the middle, they don't start together.
+  """
+  @spec intersect_at_point(line_segment(), line_segment()) ::
+          {:touch, point()}
+          | {:cross, point()}
+          | :parallel
+          | :no_intersection
+  def intersect_at_point({{x1, y1}, {x2, y2}}, {{x3, y3}, {x4, y4}}) do
+    dx1 = x2 - x1
+    dy1 = y2 - y1
+    dx2 = x4 - x3
+    dy2 = y4 - y3
+
+    den = dx1 * dy2 - dy1 * dx2
+
+    if den == 0 do
+      :parallel
+    else
+      t = ((x3 - x1) * dy2 - (y3 - y1) * dx2) / den
+      u = ((x3 - x1) * dy1 - (y3 - y1) * dx1) / den
+
+      cond do
+        t > 0 and t < 1 and u > 0 and u < 1 ->
+          {:cross, {x1 + t * dx1, y1 + t * dy1}}
+
+        (t == 0 or t == 1 or u == 0 or u == 1) and
+            (t >= 0 and t <= 1 and u >= 0 and u <= 1) ->
+          {:touch, {x1 + t * dx1, y1 + t * dy1}}
+
+        :else ->
+          :no_intersection
+      end
+    end
+  end
 end
