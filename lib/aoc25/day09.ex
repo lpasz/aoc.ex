@@ -63,6 +63,9 @@ defmodule Aoc25.Day09 do
 
     areas = areas(vs)
 
+    # this works for this example. but it's not a general solution
+    # this will fail if there is a big c shaped where the void is bigger.
+    # it will identify the void outside as the bigger square
     Enum.find_value(areas, fn {{{x1, y1}, {x2, y2}}, area} ->
       # We change order here to properly provide line_segments
       p1 = {x1, y1}
@@ -85,6 +88,7 @@ defmodule Aoc25.Day09 do
         |> Enum.all?(&(&1 == false))
 
       if no_intersections? do
+        IO.inspect({{{x1, y1}, {x2, y2}}, area})
         trunc(area)
       end
     end)

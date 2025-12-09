@@ -392,8 +392,7 @@ defmodule Aoc do
         t > 0 and t < 1 and u > 0 and u < 1 ->
           {:cross, {x1 + t * dx1, y1 + t * dy1}}
 
-        (t == 0 or t == 1 or u == 0 or u == 1) and
-            (t >= 0 and t <= 1 and u >= 0 and u <= 1) ->
+        (t == 0 or t == 1 or u == 0 or u == 1) and (t >= 0 and t <= 1 and u >= 0 and u <= 1) ->
           {:touch, {x1 + t * dx1, y1 + t * dy1}}
 
         :else ->
