@@ -48,7 +48,7 @@ defmodule Aoc25.Day09 do
     iex> Aoc25.Day09.part2("example.txt")
     24
     iex> Aoc25.Day09.part2("input.txt")
-    :todo
+    nil # too high 4602673662 
   """
   def part2(file_path) do
     vs =
@@ -58,81 +58,85 @@ defmodule Aoc25.Day09 do
       |> Enum.chunk_every(2)
       |> Enum.map(&List.to_tuple/1)
 
-    IO.puts("\n1\n")
     areas = vs |> areas() |> Map.new()
 
-    x_min = vs |> Enum.map(fn {x, _} -> x end) |> Enum.min()
-    x_max = vs |> Enum.map(fn {x, _} -> x end) |> Enum.max()
-    y_min = vs |> Enum.map(fn {_, y} -> y end) |> Enum.min()
-    y_max = vs |> Enum.map(fn {_, y} -> y end) |> Enum.max()
+    points_to_check =
+      Enum.map(areas, fn {{p1, p2}, _areas} -> {{p1, p2}, extrapolate_points(p1, p2)} end)
 
-    poly_with_borders =
-      vs
-      |> Enum.zip(tl(vs) ++ [hd(vs)])
-      |> Enum.flat_map(&fill_borders/1)
-
-    IO.puts("\n2\n")
-    y_map = Enum.group_by(poly_with_borders, fn {_x, y} -> y end)
-
-    IO.puts("\n3\n")
-
-    for_result =
-      for y <- y_min..y_max do
-        IO.puts("3.1 y -> #{y}")
-
-        line = Map.get(y_map, y)
-
-        IO.puts("3.2 y -> #{y}")
-        ranges =
-          line
-          |> Enum.map(fn {x, _y} -> x end)
-          |> Enum.sort()
-          |> Enum.uniq()
-          |> Enum.chunk_every(2, 1, :discard)
-          |> Enum.map(&List.to_tuple/1)
-          |> Enum.map(fn {x1, x2} -> x1..x2 end)
-
-        x_min..x_max
-        |> Enum.filter(fn x -> Enum.any?(ranges, &(x in &1)) end)
-        |> Enum.map(fn x -> {x, y} end)
-      end
-
-    IO.puts("\n4\n")
-
-    for_result =
-      for_result
-      |> List.flatten()
-      |> MapSet.new()
-
-    IO.puts("\n5\n")
-
-    areas
-    |> Enum.map(fn {{p1, p2}, _area} -> extrapolate_points(p1, p2) end)
-    |> Enum.filter(&MapSet.subset?(&1, for_result))
-    |> Enum.map(&MapSet.size/1)
+    points_to_check
+    |> Enum.filter(fn {_, rectangle_points} -> Enum.all?(rectangle_points, &point_in_poly?(vs, &1)) end)
+    |> Enum.map(fn {{p1, p2}, _rest} -> Map.get(areas, {p1, p2}) end)
     |> Enum.max()
-
   end
 
   defp extrapolate_points({x1, y1}, {x2, y2}) do
-    x_min = min(x1, x2)
-    x_max = max(x1, x2)
-    y_min = min(y1, y2)
-    y_max = max(y1, y2)
+    # x_min = min(x1, x2)
+    # x_max = max(x1, x2)
+    # y_min = min(y1, y2)
+    # y_max = max(y1, y2)
 
-    for_result =
-      for x <- x_min..x_max, y <- y_min..y_max do
-        {x, y}
+    # for x <- x_min..x_max, y <- y_min..y_max do
+    #   {x, y}
+    # end
+    edges = [{x1, y1}, {x1, y2}, {x2, y2}, {x2, y1}]
+
+    pairs = Enum.zip(edges, tl(edges) ++ [hd(edges)])
+
+    Enum.flat_map(pairs, fn {{x1, y1}, {x2, y2}} ->
+      if x1 == x2 do
+        Enum.map(y1..y2, &{x1, &1})
+      else
+        Enum.map(x1..x2, &{&1, y1})
       end
-
-    MapSet.new(for_result)
+    end)
   end
 
-  defp fill_borders({{x1, y1}, {x2, y2}}) do
-    if x1 == x2 do
-      Enum.map(y1..y2, fn y -> {x1, y} end)
-    else
-      Enum.map(x1..x2, fn x -> {x, y1} end)
+  def point_in_poly?(poly_vertices, {px, py}) when is_list(poly_vertices) do
+    # 1. Create the cyclic list of edges: [(V0, V1), (V1, V2), ..., (VN-1, V0)]
+    edges = Enum.zip(poly_vertices, tl(poly_vertices) ++ [hd(poly_vertices)])
+
+    # 2. Use Enum.reduce_while to calculate the winding number and check boundary condition
+    result =
+      Enum.reduce_while(edges, 0, fn {{x1, y1}, {x2, y2}}, acc ->
+        # --- Boundary Collision Check ---
+        cross_product = (y2 - y1) * (px - x1) - (x2 - x1) * (py - y1)
+
+        if cross_product == 0 and
+             min(x1, x2) <= px and px <= max(x1, x2) and
+             min(y1, y2) <= py and py <= max(y1, y2) do
+          {:halt, :on_boundary}
+        else
+          # --- Winding Number Calculation ---
+          new_acc =
+            cond do
+              # Upward edge crosses the ray (y1 <= py < y2)
+              y1 <= py and py < y2 ->
+                x_intersect = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
+                if px < x_intersect, do: acc + 1, else: acc
+
+              # Downward edge crosses the ray (y2 <= py < y1)
+              y2 <= py and py < y1 ->
+                x_intersect = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
+                if px < x_intersect, do: acc - 1, else: acc
+
+              # No crossing
+              true ->
+                acc
+            end
+
+          # Continue iteration with the new accumulator value
+          {:cont, new_acc}
+        end
+      end)
+
+    # 3. Final Result Interpretation
+    case result do
+      :on_boundary ->
+        true
+
+      winding_number ->
+        # The point is inside if the absolute winding number is non-zero
+        abs(winding_number) > 0
     end
   end
 end
