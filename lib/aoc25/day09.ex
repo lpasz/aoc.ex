@@ -57,7 +57,6 @@ defmodule Aoc25.Day09 do
       file_path
       |> Aoc.get_input()
       |> Aoc.extract_numbers()
-      # |> Enum.map(&Kernel./(&1, 1))
       |> Enum.chunk_every(2)
       |> Enum.map(&List.to_tuple/1)
 
@@ -65,33 +64,36 @@ defmodule Aoc25.Day09 do
 
     areas = areas(vs)
 
-    IO.inspect(total: length(areas))
+    fun = fn point, {_, acc} ->
+      {in?, acc} = wind(edges, point, acc)
 
-    Enum.reduce_while(areas, %{}, fn {_, total_area} = area, acc ->
-      IO.inspect(area: area)
-      borders = rectangle_border_points(area)
+      if in? do
+        {:cont, {in?, acc}}
+      else
+        {:halt, {in?, acc}}
+      end
+    end
 
-      case Enum.reduce_while(borders, acc, fn point, acc ->
-             {in?, acc} = wind(edges, point, acc)
+    Enum.reduce_while(areas, %{}, fn {{{x1, y1}, {x2, y2}}, total_area}, acc ->
+      p1 = {x1, y1}
+      p2 = {x1, y2}
+      p3 = {x2, y2}
+      p4 = {x2, y1}
 
-             if in? do
-               {:cont, acc}
-             else
-               {:halt, {in?, acc}}
-             end
-           end) do
+      # this nonsense speed things up by quite a lot, we don't need to create all borders at once
+      with {true, acc} <- wind(edges, p1, acc),
+           {true, acc} <- wind(edges, p2, acc),
+           {true, acc} <- wind(edges, p3, acc),
+           {true, acc} <- wind(edges, p4, acc),
+           {true, acc} <- Enum.reduce_while(fill(p1, p2), {nil, acc}, fun),
+           {true, acc} <- Enum.reduce_while(fill(p2, p3), {nil, acc}, fun),
+           {true, acc} <- Enum.reduce_while(fill(p3, p4), {nil, acc}, fun),
+           {true, _acc} <- Enum.reduce_while(fill(p4, p1), {nil, acc}, fun) do
+        {:halt, total_area}
+      else
         {false, acc} -> {:cont, acc}
-        _acc -> {:halt, total_area}
       end
     end)
-  end
-
-  defp rectangle_border_points({{{x1, y1}, {x2, y2}}, _area}) do
-    p1 = {x1, y1}
-    p2 = {x1, y2}
-    p3 = {x2, y2}
-    p4 = {x2, y1}
-    fill(p1, p2) ++ fill(p2, p3) ++ fill(p3, p4) ++ fill(p4, p1)
   end
 
   defp fill({x1, y1}, {x2, y2}) do
@@ -102,14 +104,7 @@ defmodule Aoc25.Day09 do
     end
   end
 
-  defp intersect?(line_seg1, line_seg2) do
-    case Aoc.intersect_at_point(line_seg1, line_seg2) do
-      {:cross, _} -> true
-      _ -> false
-    end
-  end
-
-  defp wind(edges, {px, py}, cache \\ %{}) do
+  defp wind(edges, {px, py}, cache) do
     case Map.get(cache, {px, py}) do
       nil ->
         value = do_wind(edges, {px, py})
@@ -120,50 +115,36 @@ defmodule Aoc25.Day09 do
     end
   end
 
-  defp do_wind(edges, {px, py}) do
-    result =
-      Enum.reduce_while(edges, 0, fn
-        {{x1, y1}, {x2, y2}}, acc ->
-          # --- Boundary Collision Check ---
-          cross_product = (y2 - y1) * (px - x1) - (x2 - x1) * (py - y1)
+  @inside 1
 
-          if cross_product == 0 and
-               min(x1, x2) <= px and px <= max(x1, x2) and
-               min(y1, y2) <= py and py <= max(y1, y2) do
-            # Halt immediately if on boundary
-            {:halt, :on_boundary}
-          else
-            # --- Winding Number Calculation ---
-            new_acc =
-              cond do
-                # Upward edge crossing (y1 <= py < y2)
-                y1 <= py and py < y2 ->
-                  x_intersect = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
-                  if px < x_intersect, do: acc + 1, else: acc
+  defp do_wind(edges, p3) do
+    edges
+    |> Enum.reduce_while(0, fn {p1, p2}, acc ->
+      cond do
+        in_border?(p1, p2, p3) -> {:halt, @inside}
+        upwards?(p1, p2, p3) and x_intersect?(p1, p2, p3) -> {:cont, acc + 1}
+        downwards?(p1, p2, p3) and x_intersect?(p1, p2, p3) -> {:cont, acc - 1}
+        :else -> {:cont, acc}
+      end
+    end)
+    |> then(&(abs(&1) > 0))
+  end
 
-                # Downward edge crossing (y2 <= py < y1)
-                y2 <= py and py < y1 ->
-                  x_intersect = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
-                  if px < x_intersect, do: acc - 1, else: acc
+  defp in_border?({x1, y1}, {x2, y2}, {px, py}) do
+    cross_product = (y2 - y1) * (px - x1) - (x2 - x1) * (py - y1)
 
-                # No crossing
-                true ->
-                  acc
-              end
+    cross_product == 0 and min(x1, x2) <= px and px <= max(x1, x2) and min(y1, y2) <= py and py <= max(y1, y2)
+  end
 
-            # Continue iteration
-            {:cont, new_acc}
-          end
-      end)
+  defp upwards?({_x1, y1}, {_x2, y2}, {_px, py}) do
+    y1 <= py and py < y2
+  end
 
-    # 3. Final Result Interpretation
-    case result do
-      :on_boundary ->
-        true
+  defp downwards?({_x1, y1}, {_x2, y2}, {_px, py}) do
+    y2 <= py and py < y1
+  end
 
-      winding_number ->
-        # The point is inside if the absolute winding number is non-zero
-        abs(winding_number) > 0
-    end
+  defp x_intersect?({x1, y1}, {x2, y2}, {px, py}) do
+    px < x1 + (py - y1) * (x2 - x1) / (y2 - y1)
   end
 end
