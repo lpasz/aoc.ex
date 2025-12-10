@@ -295,39 +295,32 @@ defmodule Aoc do
   """
   defmacro put_example(example_input, file_name \\ "example.txt") do
     # Capture __CALLER__ data (like file and line) immediately in the macro body.
-    caller = __CALLER__
+    module = __CALLER__.module
 
-    # We now call a private helper function, passing the caller data.
-    do_put_example(example_input, file_name, caller)
-  end
+    # Get the calling module's name (e.g., Aoc25.Day01)
 
-  # Helper function (not a macro) that does the actual work.
-  defp do_put_example(example_input, file_name, caller) do
-    # 1. Get the calling module's file path as a string and strip the 'lib/' prefix.
-    # E.g., from "lib/aoc25/day04.ex" to "aoc25/day04.ex"
-    full_file_path = caller.file |> to_string() |> String.trim_leading("lib/")
+    # Extract the year suffix (YY) and day (DD) from the module name
+    # Elixir.Aoc25.Day01 -> ["Aoc", "25", "Day", "01"]
+    parts =
+      module
+      |> Atom.to_string()
+      |> String.split(["Elixir", "Aoc", ".", "Day"], trim: true)
 
-    # 2. Get the root path without extension.
-    # E.g., "aoc25/day04"
-    base_path = Path.rootname(full_file_path)
+    case parts do
+      [y_suffix, d_pad] ->
+        # Construct the asset directory path: "assets/aocYY/dayDD"
+        dir = Path.join(["assets", "aoc#{y_suffix}", "day#{d_pad}"])
+        path = Path.join(dir, file_name)
+        inputs_dir = Path.dirname(dir)
+        File.mkdir_p!(inputs_dir)
+        File.write!(path, String.trim(example_input))
 
-    # 3. Construct the full target path, preserving the structure and using "assets/" as the root.
-    # This results in: "assets/aoc25/day04.txt"
-    target_path = Path.join(["assets", base_path, file_name])
-
-    # 4. The directory we need to create is derived from the target path (e.g., "assets/aoc25")
-    inputs_dir = Path.dirname(target_path)
-
-    # 5. Perform the side-effect (file writing) immediately upon compilation.
-    File.mkdir_p!(inputs_dir)
-    File.write!(target_path, example_input)
+      _ ->
+        raise "Aoc.put_example/1 must be called from a module with name pattern AocYY.DayDD, got: #{module}"
+    end
 
     quote do
-      # 6. Provide feedback during compilation.
-      IO.puts("--- AoC Example Input Written ---")
-      IO.puts("Source Module: #{unquote(full_file_path)} (Line: #{unquote(caller.line)})")
-      IO.puts("Input File Created: #{unquote(target_path)}")
-
+      IO.puts("example file created!")
       :ok
     end
   end

@@ -6,6 +6,8 @@ defmodule Mix.Tasks.Aoc.Gen do
 
   import Mix.Generator
 
+  require Aoc
+
   @requirements ["app.start"]
 
   def run(args) do
@@ -93,7 +95,7 @@ defmodule Mix.Tasks.Aoc.Gen do
     \"\"\"
     def part1(file_path) do
       file_path
-      |> Aoc.input_path()
+      |> Aoc.get_input()
     end
 
     @doc ~S\"\"\"
@@ -105,7 +107,7 @@ defmodule Mix.Tasks.Aoc.Gen do
     \"\"\"
     def part2(file_path) do
       file_path
-      |> Aoc.input_path()
+      |> Aoc.get_input()
     end
   end
   """)
