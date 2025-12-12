@@ -1,7 +1,6 @@
-defmodule Aoc25.Day09Test do
+defmodule Aoc25.Day11Test do
   use ExUnit.Case, async: true
 
   @moduletag timeout: :infinity
-
-  doctest Aoc25.Day09
+  doctest Aoc25.Day11
 end
