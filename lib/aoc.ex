@@ -1,5 +1,8 @@
 defmodule Aoc do
   @moduledoc false
+
+  import Bitwise
+
   def two_parts_input(file_path) do
     [a, b] =
       file_path
@@ -116,7 +119,12 @@ defmodule Aoc do
     |> Enum.map(&Enum.map(&1, fun))
   end
 
-  def parse_matrix_map(text, splitter \\ &String.codepoints/1, fun \\ & &1) do
+  def parse_matrix_map(
+        text,
+        splitter \\ &String.codepoints/1,
+        fun \\ &Function.identity/1,
+        reject_values? \\ fn _ -> false end
+      ) do
     text
     |> String.split("\n")
     |> Enum.map(splitter)
@@ -126,6 +134,7 @@ defmodule Aoc do
       |> Enum.with_index()
       |> Enum.map(fn {value, x} -> {{x, y}, fun.(value)} end)
     end)
+    |> Enum.reject(fn {_, value} -> reject_values?.(value) end)
     |> Map.new()
   end
 
@@ -391,6 +400,57 @@ defmodule Aoc do
         :else ->
           :no_intersection
       end
+    end
+  end
+
+  @doc """
+  In a Non-Cyclic Graph, its a fast way to count the number of paths.
+
+  I do not fully understand why this is so fast.
+  """
+  def count_paths(graph, from, to) do
+    {count, _} = find_path(graph, %{}, from, to)
+    count
+  end
+
+  defp find_path(outputs, paths, from, to) do
+    cond do
+      from == to ->
+        {1, paths}
+
+      count = Map.get(paths, from) ->
+        {count, paths}
+
+      :else ->
+        {count, new_paths} =
+          outputs
+          |> Map.get(from, [])
+          |> Enum.reduce({0, paths}, fn next, {acc_count, acc_paths} ->
+            {n_count, updated_paths} = find_path(outputs, acc_paths, next, to)
+            {acc_count + n_count, updated_paths}
+          end)
+
+        {count, Map.put(new_paths, from, count)}
+    end
+  end
+
+  def to_mask(<<>>, _on), do: 0
+
+  def to_mask(<<c, rest::binary>>, on) do
+    to_mask(rest, on) <<< 1 ||| if c in on, do: 1, else: 0
+  end
+
+  def masks_to_matrix(rows, w) do
+    for row <- rows do
+      for i <- (w - 1)..0 do
+        row >>> i &&& 1
+      end
+    end
+  end
+
+  def matrix_to_masks(matrix) do
+    for row <- matrix do
+      Enum.reduce(row, 0, fn bit, acc -> acc <<< 1 ||| bit end)
     end
   end
 end

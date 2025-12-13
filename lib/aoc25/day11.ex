@@ -13,7 +13,7 @@ defmodule Aoc25.Day11 do
   def part1(file_path) do
     file_path
     |> parse()
-    |> count_paths("you", "out")
+    |> all_paths("you", "out")
   end
 
   @doc ~S"""
@@ -26,8 +26,12 @@ defmodule Aoc25.Day11 do
   def part2(file_path) do
     graph = parse(file_path)
 
-    count_paths(graph, "svr", "dac") * count_paths(graph, "dac", "fft") * count_paths(graph, "fft", "out") +
-      count_paths(graph, "svr", "fft") * count_paths(graph, "fft", "dac") * count_paths(graph, "dac", "out")
+    Aoc.count_paths(graph, "svr", "dac") *
+      Aoc.count_paths(graph, "dac", "fft") *
+      Aoc.count_paths(graph, "fft", "out") +
+      Aoc.count_paths(graph, "svr", "fft") *
+        Aoc.count_paths(graph, "fft", "dac") *
+        Aoc.count_paths(graph, "dac", "out")
   end
 
   defp parse(file_path) do
@@ -38,33 +42,6 @@ defmodule Aoc25.Day11 do
       [key, rest] = String.split(line, ":")
       {key, String.split(rest, " ", trim: true)}
     end)
-  end
-
-  # this solution is absurdly faster, i need to understand why, because they are somewhat similar
-  defp count_paths(graph, from, to) do
-    {count, _} = find_path(graph, %{}, from, to)
-    count
-  end
-
-  defp find_path(outputs, paths, from, to) do
-    cond do
-      from == to ->
-        {1, paths}
-
-      count = Map.get(paths, from) ->
-        {count, paths}
-
-      :else ->
-        {count, new_paths} =
-          outputs
-          |> Map.get(from, [])
-          |> Enum.reduce({0, paths}, fn next, {acc_count, acc_paths} ->
-            {n_count, updated_paths} = find_path(outputs, acc_paths, next, to)
-            {acc_count + n_count, updated_paths}
-          end)
-
-        {count, Map.put(new_paths, from, count)}
-    end
   end
 
   # this one is much slower and wont even finish
