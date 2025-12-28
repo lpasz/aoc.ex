@@ -1,147 +1,88 @@
 defmodule Aoc25.Day10 do
   @moduledoc "https://adventofcode.com/2025/day/10"
+  import Bitwise
 
   require Aoc
 
   @doc ~S"""
   ## Examples
-    iex> Aoc25.Day10.part1("example.txt")
-    7
-    iex> Aoc25.Day10.part1("input.txt")
-    517
+      iex> Aoc25.Day10.part1("example.txt")
+      7
+      iex> Aoc25.Day10.part1("input.txt")
+      517
   """
   def part1(file_path) do
     file_path
     |> Aoc.get_input()
     |> parse()
-    |> Enum.map(&search_smallest_switches(&1, %{&1.start_switches => 0}))
+    |> Task.async_stream(fn item -> 
+      search_smallest_bits(
+        :queue.from_list([{item.start_bits, 0}]), 
+        MapSet.new([item.start_bits]), 
+        item
+      )
+    end)
+    |> Enum.map(fn {:ok, res} -> res end)
     |> Enum.sum()
   end
 
-  defp search_smallest_switches(item, next) do
-    cnt_or_acc =
-      Enum.reduce_while(next, %{}, fn {state, cnt}, acc ->
-        item.buttons
-        |> Enum.map(&button_press(state, &1))
-        |> Enum.reduce_while(acc, fn state, acc ->
-          cond do
-            state == item.goal_switches -> {:halt, {:halt, cnt + 1}}
-            Map.has_key?(acc, state) -> {:cont, acc}
-            :else -> {:cont, Map.put(acc, state, cnt + 1)}
-          end
-        end)
-        |> case do
-          {:halt, cnt} -> {:halt, cnt}
-          acc -> {:cont, acc}
+  defp search_smallest_bits(q, visited, item) do
+    case :queue.out(q) do
+      {{:value, {current_state, dist}}, q} ->
+        if current_state == item.goal_bits do
+          dist
+        else
+          {new_q, new_v} = 
+            Enum.reduce(item.buttons_bits, {q, visited}, fn btn_mask, {acc_q, acc_v} ->
+              # Usando bxor/2 em vez de ^^^
+              next_state = bxor(current_state, btn_mask)
+              
+              if MapSet.member?(acc_v, next_state) do
+                {acc_q, acc_v}
+              else
+                {:queue.in({next_state, dist + 1}, acc_q), MapSet.put(acc_v, next_state)}
+              end
+            end)
+          
+          search_smallest_bits(new_q, new_v, item)
         end
-      end)
-
-    if is_integer(cnt_or_acc) do
-      cnt_or_acc
-    else
-      search_smallest_switches(item, cnt_or_acc)
+      {:empty, _} -> 
+        nil
     end
-  end
-
-  defp button_press(state, button) do
-    Enum.reduce(button, state, fn press, state ->
-      Map.update(state, press, false, &(not &1))
-    end)
-  end
-
-  @doc ~S"""
-  ## Examples
-    iex> Aoc25.Day10.part2("example.txt")
-    33
-    # iex> Aoc25.Day10.part2("input.txt")
-    # :todo
-  """
-  def part2(file_path) do
-    file_path
-    |> Aoc.get_input()
-    |> parse()
-    |> Enum.map(&search_smallest_joltage(&1, %{&1.start_joltage => 0}))
-    |> Enum.sum()
-  end
-
-  defp search_smallest_joltage(item, next, depth \\ 0) do
-    IO.inspect(depth: depth)
-
-    cnt_or_acc =
-      Enum.reduce_while(next, %{}, fn {state, cnt}, acc ->
-        item.buttons
-        |> Enum.map(&button_press_joltage(state, &1))
-        |> Enum.reduce_while(acc, fn state, acc ->
-          if state == item.goal_joltage do
-            {:halt, {:halt, cnt + 1}}
-          else
-            {:cont, Map.put(acc, state, cnt + 1)}
-          end
-        end)
-        |> case do
-          {:halt, cnt} -> {:halt, cnt}
-          acc -> {:cont, acc}
-        end
-      end)
-
-    if is_integer(cnt_or_acc) do
-      cnt_or_acc
-    else
-      search_smallest_joltage(item, cnt_or_acc, depth + 1)
-    end
-  end
-
-  defp button_press_joltage(state, button) do
-    Enum.reduce(button, state, fn press, state ->
-      Map.update(state, press, 0, &(&1 + 1))
-    end)
   end
 
   defp parse(input) do
     input
-    |> String.split("\n")
+    |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
-      switches = to_switches(line)
-      joltage = to_joltage(line)
+      [_, switches_str, buttons_str, _joltage_str] = Regex.run(~r/\[(.*)\] \((.*)\) \{(.*)\}/, line)
+      
+      len = String.length(switches_str)
+      
+      goal_bits = 
+        switches_str
+        |> String.replace(".", "0")
+        |> String.replace("#", "1")
+        |> String.to_integer(2)
+
+      buttons_bits = 
+        buttons_str
+        |> String.split(") (")
+        |> Enum.map(fn b ->
+          b 
+          |> Aoc.extract_numbers()
+          |> Enum.reduce(0, fn idx, acc -> 
+            # Usando bor/2 e bsl/2 em vez de | e <<<
+            bor(acc, bsl(1, (len - 1 - idx)))
+          end)
+        end)
 
       %{
-        start_switches: Map.new(switches, fn {idx, _} -> {idx, false} end),
-        goal_switches: switches,
-        buttons: to_buttons(line),
-        start_joltage: Map.new(joltage, fn {idx, _} -> {idx, 0} end),
-        goal_joltage: joltage
+        start_bits: 0,
+        goal_bits: goal_bits,
+        buttons_bits: buttons_bits,
+        len: len
       }
     end)
-  end
-
-  defp to_switches(line) do
-    [[switches]] = Regex.scan(~r|\[.*\]|, line)
-
-    switches
-    |> String.codepoints()
-    |> Enum.flat_map(fn
-      "." -> [false]
-      "#" -> [true]
-      _ -> []
-    end)
-    |> Enum.with_index(0)
-    |> Map.new(fn {v, idx} -> {idx, v} end)
-  end
-
-  defp to_buttons(line) do
-    [[buttons]] = Regex.scan(~r|\(.*\)|, line)
-
-    buttons
-    |> String.split("\) ")
-    |> Enum.map(&Aoc.extract_numbers/1)
-  end
-
-  defp to_joltage(line) do
-    [[joltage]] = Regex.scan(~r|\{.*\}|, line)
-
-    joltage
-    |> Aoc.extract_numbers()
-    |> Enum.with_index(0)
-    |> Map.new(fn {v, idx} -> {idx, v} end)
   end
 end
