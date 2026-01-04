@@ -14,21 +14,13 @@ defmodule Aoc25.Day06 do
     file_path
     |> Aoc.get_input()
     |> String.split("\n", trim: true)
-    |> Enum.map(fn line ->
-      case Aoc.extract_positive_numbers(line) do
-        [] -> ~r/\*|\+/ |> Regex.scan(line) |> List.flatten()
-        numbers -> numbers
-      end
-    end)
+    |> Enum.map(&String.split/1)
     |> Aoc.transpose()
-    |> Enum.map(fn line ->
-      Enum.reduce(line, [], fn num, acc ->
-        cond do
-          is_number(num) -> [num | acc]
-          "*" == num -> Enum.product(acc)
-          "+" == num -> Enum.sum(acc)
-        end
-      end)
+    |> Enum.map(&Enum.reverse/1)
+    |> Enum.map(fn [h | t] -> [h | Enum.map(t, &String.to_integer/1)] end)
+    |> Enum.map(fn
+      ["*" | numbers] -> Enum.product(numbers)
+      ["+" | numbers] -> Enum.sum(numbers)
     end)
     |> Enum.sum()
   end
@@ -46,17 +38,27 @@ defmodule Aoc25.Day06 do
     |> String.split("\n")
     |> Enum.reject(&(String.trim(&1) == ""))
     |> Enum.map(&String.codepoints/1)
-    |> Enum.map(&Enum.reverse/1)
     |> Aoc.transpose()
     |> Enum.map(&Enum.join/1)
-    |> Enum.reduce({0, []}, fn itm, {acc, mid} ->
-      case Regex.scan(~r/\d+|\+|\*/, itm) do
-        [] -> {acc, mid}
-        [[num]] -> {acc, [String.to_integer(num) | mid]}
-        [[num], ["+"]] -> {acc + Enum.sum([String.to_integer(num) | mid]), []}
-        [[num], ["*"]] -> {acc + Enum.product([String.to_integer(num) | mid]), []}
-      end
+    |> Enum.map(&String.trim/1)
+    |> Enum.flat_map(&parse_int/1)
+    |> Enum.chunk_by(&is_binary/1)
+    |> Enum.chunk_every(2)
+    |> Enum.map(fn
+      [["*"], rest] -> Enum.product(rest)
+      [["+"], rest] -> Enum.sum(rest)
     end)
-    |> then(fn {acc, _} -> acc end)
+    |> Enum.sum()
+  end
+
+  defp parse_int(s) do
+    lst = String.last(s)
+    parsed = Integer.parse(s)
+
+    cond do
+      :error == parsed -> []
+      lst in ["*", "+"] -> [lst, elem(parsed, 0)]
+      :else -> [elem(parsed, 0)]
+    end
   end
 end
