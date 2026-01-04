@@ -35,12 +35,9 @@ defmodule Aoc25.Day06 do
   def part2(file_path) do
     file_path
     |> Aoc.get_input()
-    |> String.split("\n")
-    |> Enum.reject(&(String.trim(&1) == ""))
+    |> String.split("\n", trim: true)
     |> Enum.map(&String.codepoints/1)
     |> Aoc.transpose()
-    |> Enum.map(&Enum.join/1)
-    |> Enum.map(&String.trim/1)
     |> Enum.flat_map(&parse_int/1)
     |> Enum.chunk_by(&is_binary/1)
     |> Enum.chunk_every(2)
@@ -51,7 +48,8 @@ defmodule Aoc25.Day06 do
     |> Enum.sum()
   end
 
-  defp parse_int(s) do
+  defp parse_int(codepoints) do
+    s = codepoints |> Enum.reject(&(&1 in ["", " "])) |> Enum.join()
     lst = String.last(s)
     parsed = Integer.parse(s)
 
